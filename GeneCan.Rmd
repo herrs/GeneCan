@@ -1,0 +1,92 @@
+-- GeneCan----
+Author: Sam Herr, Krista Miller, Dan Pollard
+Description: This markdown prepares files for use in GeneCan which find Candidate genes in
+            QTL location found by QTLseqR packages. The input of these files are .vcf                    files.
+            
+Email: Samuelkherr@gmail.com for any questions
+-------------------------
+
+```{r load packages} 
+
+###Adapted from Kuo et. al. - Full RNA/Protein analysis for Kuo et al: A simple mass-action model predicts protein timecourses from mRNA trajectories during a dynamic response in S. cerevisiae
+
+library("QTLseqr")
+library("tidyverse")
+library("gtools")
+library(jsonlite)
+library(openxlsx)
+
+
+packages = c('QTLseqr', "tidyverse", "gtools", "jsonlite", "openxlsx")
+ 
+## Now load or install&load all
+ package.check <- lapply(
+   packages,
+   FUN = function(x) {
+     if (!require(x, character.only = TRUE)) {
+       install.packages(x, dependencies = TRUE)
+       library(x, character.only = TRUE)
+     }
+  }
+ )
+```
+
+
+Run Qtlseqr on autofluorence and gene of interests (GOIs) 
+Get initial estimates of GOI dsNP and autofluorescence dSNP
+Input file directories and  timepoints of interest
+
+```{r}
+
+source("R/dSNP-functions")
+source("R/GeneCan-functions")
+################USER INPUT#############################################################
+########Place all timepoints in AF experiment
+times <- list("t0", "t2", "t5","t8")
+### The folder containing gene of interests vcf files.
+allGOI <- ListFiles("GOIs1")
+##Have autofluoresence vcf tables in a folder
+allAf <- ListFiles("AutoF")
+##Get initial GOI and Autofluorescence
+imputatedAuto <- getImputation(allGOI, allAf, times)
+##########################################################################################
+
+##outputs normalized deltaSNPS for each gene and timepoint nested in their respective timepoint 
+dSNPS <- lapply(times, getTime, GOI = allGOI, AF = imputatedAuto)
+
+##Creates one list of all gene dataframes
+len = length(dSNPS)
+alldSNP <- list()
+for( i in 1:len) {
+  alldSNP <- c(alldSNP,dSNPS[[i]])
+  
+}
+  
+alldSNP <- lapply(alldSNP,limitIt)
+
+###alldSNP is an important list to use in both graphing and in GeneCan
+alldSNP<- alldSNP[allGOI]
+
+
+###normSigR is just as important 
+normSigR <- lapply(alldSNP,getQTLTables) 
+
+```
+
+
+GeneCan will output excel files for each Gene and timepoint.
+GeneCan finds the Genes associated with each QTL region gotten from the list normSigR
+For each gene it gives the average dSNP score and then phenotype and Go terms associated with the main gene of interest (in our case FIG1)
+It also compares interactors and regulators in common with main gene of interest (FIG1)
+
+```{r}
+####Code for GeneCAN to run
+###MAKE SURE TO LOOK AT the function autoQTLsnps for gene names
+genes <- "gff_final_clean.txt"
+
+GOIname <- names(alldSNP)
+
+####To edit phenotype/GO term list and comparative Gene go into the Genecan-function itself on line 393.
+GeneCan <- lapply(GOIname, autoQTLsnps, alldSNP, genes, normSigR)
+```
+
