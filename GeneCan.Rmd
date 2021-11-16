@@ -44,9 +44,9 @@ source("R/GeneCan-functions")
 ##Place all timepoints in AF experiment
 times <- list("t0", "t2", "t5","t8")
 ##The folder containing gene of interests vcf files.
-allGOI <- ListFiles("GOIs")
+allGOI <- ListFiles("data/GOIs")
 ##Have autofluoresence vcf tables in a folder
-allAf <- ListFiles("AutoF")
+allAf <- ListFiles("data/AutoF")
 
 ##########################################################################################
 
