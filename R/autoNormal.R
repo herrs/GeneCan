@@ -58,7 +58,7 @@ interpolate <- function(chrom, aut0, diff){
   if (length(unlist(GOI$POS)) >1){
     imputateAF <- approx(unlist(auto$POS), unlist(auto$tricubeDeltaSNP), xout = unlist(GOI$POS),  rule = 2)
     imputateAF <-  tibble(POS = imputateAF$x, tricubeDeltaSNP = imputateAF$y)
-    t <- rbind(auto, why)
+    t <- rbind(auto, imputateAF)
     imputatedValues <- arrange(t, POS)
     ###Replace beginning and end values with nearest value
     imputatedValues$tricubeDeltaSNP <- na.locf(imputatedValues$tricubeDeltaSNP, fromLast =  T, na.rm = F)
